@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sportdaten-App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Password Protection Overlay -->
+    <div id="passwordOverlay" class="password-overlay">
+        <div class="password-card">
+            <h1>Sportdaten-App</h1>
+            <p>Bitte geben Sie das Passwort ein:</p>
+            
+            <form id="passwordForm">
+                <div class="form-group">
+                    <input type="password" id="passwordInput" class="form-control" placeholder="Passwort eingeben" required autofocus>
+                </div>
+                <button type="submit" class="btn btn--primary btn--full-width">
+                    Anmelden
+                </button>
+            </form>
+            
+            <div id="passwordError" class="error-message hidden">
+                Falsches Passwort. Bitte versuchen Sie es erneut.
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Main App -->
+        <div id="mainApp">
+            <!-- Header -->
+            <div class="app-header card">
+                <div class="card__body">
+                    <div class="header-content">
+                        <div>
+                            <h2>Sportdaten-App</h2>
+                            <p class="connection-status" id="connectionStatus">Verbindung wird hergestellt...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Form -->
+            <div class="card">
+                <div class="card__body">
+                    <h3>Ergebnis eingeben</h3>
+                    
+                    <form id="resultForm">
+                        <div class="form-group">
+                            <label for="riegeSelect" class="form-label">Riege:</label>
+                            <select id="riegeSelect" class="form-control" required>
+                                <option value="">Bitte Riege wählen</option>
+                                <option value="Cali">Cali</option>
+                                <option value="Tampere">Tampere</option>
+                                <option value="Bergen">Bergen</option>
+                                <option value="Espo">Espo</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="athleteSelect" class="form-label">Athlet:</label>
+                            <select id="athleteSelect" class="form-control" required disabled>
+                                <option value="">Erst Riege wählen</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="disciplineSelect" class="form-label">Disziplin:</label>
+                            <select id="disciplineSelect" class="form-control" required>
+                                <option value="">Disziplin wählen</option>
+                                <option value="Weitsprung">Weitsprung (m)</option>
+                                <option value="Wurf">Wurf (m)</option>
+                                <option value="Sprint">Sprint (s)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="valueInput" class="form-label">Wert:</label>
+                            <input type="tel" id="valueInput" class="form-control" placeholder="0.00" inputmode="decimal" required>
+                        </div>
+
+                        <button type="submit" class="btn btn--primary btn--full-width" id="submitBtn" disabled>
+                            Ergebnis hinzufügen
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Export Controls -->
+            <div class="card">
+                <div class="card__body">
+                    <h3>Export</h3>
+                    <div class="button-group">
+                        <button id="exportCsvBtn" class="btn btn--secondary">
+                            CSV exportieren
+                        </button>
+                        <button id="exportJsonBtn" class="btn btn--secondary">
+                            JSON exportieren
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="tabs">
+                <button id="bestListTab" class="tab-button active">Bestenliste</button>
+                <button id="allResultsTab" class="tab-button">Alle Ergebnisse</button>
+            </div>
+
+            <!-- Best Results -->
+            <div id="bestResults" class="results-section">
+                <div class="card">
+                    <div class="card__body">
+                        <h3>Bestenliste</h3>
+                        <div id="bestResultsList" class="results-list">
+                            <p class="no-results">Noch keine Ergebnisse vorhanden</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Results -->
+            <div id="allResults" class="results-section hidden">
+                <div class="card">
+                    <div class="card__body">
+                        <h3>Alle Ergebnisse</h3>
+                        <div id="allResultsList" class="results-list">
+                            <p class="no-results">Noch keine Ergebnisse vorhanden</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="loading-spinner"></div>
+            <p>Lädt...</p>
+        </div>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message hidden">
+            <p>Ergebnis erfolgreich hinzugefügt!</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK v9.22.0 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>

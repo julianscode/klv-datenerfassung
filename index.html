@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KLV Datenerfassung</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <!-- Password Overlay -->
+    <div id="passwordOverlay" class="password-overlay">
+        <div class="password-modal">
+            <h2>KLV Datenerfassung</h2>
+            <p>Bitte geben Sie das Passwort ein:</p>
+            <div class="form-group">
+                <input type="password" id="passwordInput" class="form-control" placeholder="Passwort eingeben">
+                <button id="passwordSubmit" class="btn btn--primary btn--full-width">Anmelden</button>
+            </div>
+            <div id="passwordError" class="error-message hidden">Falsches Passwort. Bitte versuchen Sie es erneut.</div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-modal">
+            <div class="loading-spinner-large"></div>
+            <p>Daten werden geladen...</p>
+        </div>
+    </div>
+
+    <!-- Confirmation Overlay -->
+    <div id="confirmationOverlay" class="confirmation-overlay hidden">
+        <div class="confirmation-modal">
+            <div class="confirmation-header">
+                <h3>Ergebnis erfasst!</h3>
+            </div>
+            <div class="confirmation-content">
+                <div class="confirmation-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Athlet:</span>
+                        <span id="confirmAthlete" class="detail-value"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Versuch:</span>
+                        <span id="confirmAttempt" class="detail-value"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Leistung:</span>
+                        <span id="confirmPerformance" class="detail-value"></span>
+                    </div>
+                </div>
+                <div class="next-athlete-info">
+                    <p><strong>Als nächstes:</strong> <span id="nextAthlete"></span></p>
+                </div>
+            </div>
+            <button id="confirmationClose" class="btn btn--primary btn--sm">Weiter</button>
+        </div>
+    </div>
+
+    <!-- Enhanced Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Eintrag wirklich löschen?</h3>
+            <div id="deleteEntryDetails" class="delete-details-enhanced"></div>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn btn--primary">Ja, löschen</button>
+                <button id="cancelDelete" class="btn btn--outline">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- X Button Confirmation Modal -->
+    <div id="xButtonModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Versuch ungültig</h3>
+            <p id="xButtonMessage">Versuch ungültig oder nicht angetreten</p>
+            <div class="modal-actions">
+                <button id="confirmXButton" class="btn btn--primary">Bestätigen</button>
+                <button id="cancelXButton" class="btn btn--outline">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Athlete Details Modal -->
+    <div id="athleteDetailsModal" class="modal hidden">
+        <div class="modal-content modal-content-large">
+            <h3 id="athleteDetailsTitle">Athletendetails</h3>
+            <div id="athleteDetailsContent" class="athlete-details-content"></div>
+            <div class="modal-actions">
+                <button id="closeAthleteDetails" class="btn btn--outline">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="main-app hidden">
+        <div class="container">
+            <header class="app-header">
+                <div class="header-content">
+                    <div class="header-info">
+                        <h1>KLV Datenerfassung</h1>
+                        <!-- <p class="text-secondary">Leistungen erfassen und verwalten</p> -->
+                    </div>
+                    <div class="header-nav">
+                        <button id="backToLoginFromMain" class="btn btn--outline btn--sm">Abmelden</button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="app-content">
+                <!-- Status Message -->
+                <div id="statusMessage" class="status-message hidden"></div>
+
+                <!-- Form -->
+                <div class="data-form">
+                    <!-- Riege Selection -->
+                    <div class="form-group">
+                        <label class="form-label" for="riegeSelect">Riege auswählen</label>
+                        <select id="riegeSelect" class="form-control">
+                            <option value="">Riege wählen...</option>
+                        </select>
+                    </div>
+
+                    <!-- Discipline Selection -->
+                    <div class="form-group">
+                        <label class="form-label" for="disciplineSelect">Disziplin auswählen</label>
+                        <select id="disciplineSelect" class="form-control">
+                            <option value="">Disziplin wählen...</option>
+                            <option value="Weitsprung">Weitsprung</option>
+                            <option value="Wurf">Wurf</option>
+                            <option value="Sprint">Sprint</option>
+                        </select>
+                    </div>
+
+                    <!-- Athlete Selection -->
+                    <div class="form-group">
+                        <label class="form-label" for="athleteSelect">Athlet auswählen</label>
+                        <select id="athleteSelect" class="form-control" disabled>
+                            <option value="">Zuerst Riege wählen...</option>
+                        </select>
+                    </div>
+
+                    <!-- Attempt Display -->
+                    <div id="attemptDisplay" class="attempt-display hidden">
+                        <span id="attemptText">1. Versuch</span>
+                    </div>
+
+                    <!-- Performance Input -->
+                    <div class="form-group">
+                        <label class="form-label" for="performanceInput">
+                            Leistung eingeben <span id="unitDisplay" class="unit-display"></span>
+                            <small class="input-hint">Bei ungültigem Versuch "X - Ungültiger Versuch" Knopf unten drücken</small>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="performanceInput" 
+                            class="form-control" 
+                            step="0.01" 
+                            min="0"
+                            inputmode="decimal"
+                            placeholder="Wert eingeben..."
+                            disabled>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="submit-section">
+                        <button id="submitButton" class="btn btn--primary btn--full-width" disabled>
+                            <span id="submitText">Ergebnis hinzufügen</span>
+                            <div id="loadingSpinner" class="loading-spinner hidden"></div>
+                        </button>
+                        <button id="xButton" class="btn btn--outline btn--full-width" disabled>
+                            X - Ungültiger Versuch
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div class="history-section">
+                    <h3>Historie - Verfügbare Einträge</h3>
+                    <div id="historyList" class="history-list">
+                        <div class="history-empty">
+                            <p>Wählen Sie eine Riege und Disziplin um verfügbare Einträge zu sehen.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminApp" class="admin-app hidden">
+        <div class="container">
+            <header class="admin-header">
+                <h1>KLV Admin-Panel</h1>
+                <div class="admin-nav">
+                    <button id="backToLogin" class="btn btn--outline btn--sm">Zurück zur Anmeldung</button>
+                </div>
+            </header>
+
+            <main class="admin-content">
+                <!-- Status Message -->
+                <div id="adminStatusMessage" class="status-message hidden"></div>
+
+                <!-- Admin Controls -->
+                <div class="admin-controls">
+                    <button id="showAllEntries" class="btn btn--secondary">Alle Firebase-Daten anzeigen</button>
+                    <button id="calculatePoints" class="btn btn--primary">Punkte berechnen</button>
+                    <button id="exportCsv" class="btn btn--outline">CSV Export</button>
+                </div>
+
+                <!-- All Entries Section -->
+                <div id="allEntriesSection" class="admin-section hidden">
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Alle Firebase-Einträge</h3>
+                            <div id="entriesTable" class="entries-table"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rankings Section -->
+                <div id="rankingsSection" class="admin-section hidden">
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Ranglisten nach Kategorien</h3>
+                            <div id="rankingsContainer" class="rankings-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: Bestenliste Section -->
+                <div class="admin-section">
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>🏅 Bestenliste</h3>
+                            <div class="bestenliste-controls">
+                                <div class="form-group">
+                                    <label class="form-label">Geschlecht</label>
+                                    <select id="bestenlisteGender" class="form-control">
+                                        <option value="">Geschlecht wählen...</option>
+                                        <option value="m">Männlich</option>
+                                        <option value="w">Weiblich</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Altersklasse</label>
+                                    <select id="bestenlisteAge" class="form-control">
+                                        <option value="">Altersklasse wählen...</option>
+                                        <option value="2005">Jahrgang 2005</option>
+                                        <option value="2006">Jahrgang 2006</option>
+                                        <option value="2007">Jahrgang 2007</option>
+                                        <option value="2008">Jahrgang 2008</option>
+                                        <option value="2009">Jahrgang 2009</option>
+                                        <option value="2010">Jahrgang 2010</option>
+                                        <option value="2011">Jahrgang 2011</option>
+                                        <option value="2012">Jahrgang 2012</option>
+                                        <option value="2013">Jahrgang 2013</option>
+                                        <option value="2014">Jahrgang 2014</option>
+                                        <option value="2015">Jahrgang 2015</option>
+                                        <option value="2016">Jahrgang 2016</option>
+                                        <option value="2017">Jahrgang 2017</option>
+                                        <option value="2018">Jahrgang 2018</option>
+                                        <option value="2019">Jahrgang 2019</option>
+                                        <option value="2020">Jahrgang 2020</option>
+                                        <option value="2021">Jahrgang 2021</option>
+                                        <option value="MU20">MU20</option>
+                                        <option value="MU18">MU18</option>
+                                        <option value="MU16">MU16</option>
+                                        <option value="MU14">MU14</option>
+                                        <option value="MU12">MU12</option>
+                                        <option value="MU10">MU10</option>
+                                        <option value="MU8">MU8</option>
+                                        <option value="MU6">MU6</option>
+                                        <option value="WU20">WU20</option>
+                                        <option value="WU18">WU18</option>
+                                        <option value="WU16">WU16</option>
+                                        <option value="WU14">WU14</option>
+                                        <option value="WU12">WU12</option>
+                                        <option value="WU10">WU10</option>
+                                        <option value="WU8">WU8</option>
+                                        <option value="WU6">WU6</option>
+                                        <option value="Männer">Männer</option>
+                                        <option value="Frauen">Frauen</option>
+                                    </select>
+                                </div>
+                                <div class="bestenliste-actions">
+                                    <button id="showBestenliste" class="btn btn--primary">Anzeigen</button>
+                                    <button id="exportBestenliste" class="btn btn--outline" disabled>CSV Export</button>
+                                </div>
+                            </div>
+                            <div id="bestenlisteTable" class="bestenliste-table hidden"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Athletes Management -->
+                <div class="admin-section">
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Athleten verwalten</h3>
+                            <div class="athlete-form">
+                                <div class="form-group">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" id="athleteName" class="form-control" placeholder="Athletenname">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Jahrgang</label>
+                                    <input type="number" id="athleteYear" class="form-control" placeholder="z.B. 2010">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Geschlecht</label>
+                                    <select id="athleteGender" class="form-control">
+                                        <option value="">Geschlecht wählen...</option>
+                                        <option value="m">Männlich</option>
+                                        <option value="w">Weiblich</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Riege</label>
+                                    <input type="text" id="athleteRiege" class="form-control" placeholder="Riege eingeben">
+                                </div>
+                                <button id="addAthlete" class="btn btn--primary">Athlet zu Firebase hinzufügen</button>
+                            </div>
+                            <div id="athletesList" class="athletes-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

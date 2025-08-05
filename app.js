@@ -697,15 +697,15 @@ class KLVDataApp {
             let attemptCount = 0;
             
             if (discipline.code === 'RUN') {
-                // For sprint, check if there's a value
-                if (athleteData.RUN && athleteData.RUN !== '' && athleteData.RUN !== 'X') {
+                // For sprint, check if there's a value (including X)
+                if (athleteData.RUN && athleteData.RUN !== '') {
                     allCompleted = true;
                     attemptCount = 1;
                 }
             } else {
-                // For LJ/BT, count non-empty attempts
+                // For LJ/BT, count all attempts (including X)
                 discipline.fields.forEach(field => {
-                    if (athleteData[field] && athleteData[field] !== '' && athleteData[field] !== 'X') {
+                    if (athleteData[field] && athleteData[field] !== '') {
                         attemptCount++;
                     }
                 });
@@ -835,7 +835,7 @@ class KLVDataApp {
                 // Collect all attempts for this discipline
                 discipline.fields.forEach((field, index) => {
                     const value = athlete[field];
-                    if (value && value !== '' && value !== 'X') {
+                    if (value && value !== '') {
                         const attemptNumber = discipline.code === 'RUN' ? 1 : index + 1;
                         // Use timestamp from field if available, otherwise use current time
                         const timestamp = athlete[`${field}_timestamp`] || Date.now();
@@ -879,7 +879,7 @@ class KLVDataApp {
                 historyItem.className = 'history-item';
                 
                 const unit = discipline.unit;
-                const displayValue = entry.value === 0 ? 'ungültig' : `${entry.value}${unit}`;
+                const displayValue = entry.value === 'X' ? 'X' : entry.value === 0 ? 'ungültig' : `${entry.value}${unit}`;
                 
                 historyItem.innerHTML = `
                     <div class="history-item-content">
